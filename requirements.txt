@@ -9,4 +9,5 @@ httpx>=0.24
 openai>=1.0
 apscheduler>=3.10
 psycopg[binary]>=3.2
+python-multipart>=0.0.7
 
