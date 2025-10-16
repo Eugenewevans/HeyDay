@@ -3,50 +3,216 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HeyDay MVP – Frontend</title>
+    <title>HeyDay – Automations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; }
-      input, select, textarea, button { padding: .5rem; margin: .25rem 0; width: 100%; max-width: 480px; }
-      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 640px; }
+      :root { --max: 1100px; --muted: #6b7280; --bg:#0b1020; --panel:#121a36; --card:#111827; --text:#e5e7eb; --accent:#6366f1; --ok:#10b981; --danger:#ef4444; }
+      html, body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .wrap { margin: 2rem auto; max-width: var(--max); padding: 0 1rem; }
+      h1 { font-size: 1.75rem; font-weight: 600; margin: 0 0 1rem; }
+      h2 { font-size: 1.1rem; font-weight: 600; margin: 0 0 .75rem; }
+      .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; }
+      .card { grid-column: span 6; background: var(--card); border: 1px solid #1f2937; border-radius: 12px; padding: 1rem; }
+      .card.full { grid-column: 1 / -1; }
+      label { display:block; font-size: .85rem; color: var(--muted); margin-top: .5rem; }
+      input, select, textarea { width: 100%; background: #0f172a; color: var(--text); border: 1px solid #1f2937; border-radius: 8px; padding: .6rem .7rem; margin-top: .25rem; }
+      button { background: var(--accent); color: white; border: 0; border-radius: 8px; padding: .55rem .9rem; margin-top: .6rem; cursor: pointer; }
+      button.secondary { background: #334155; }
+      .row { display:flex; gap:.5rem; align-items:center; flex-wrap: wrap; }
+      .muted { color: var(--muted); font-size: .9rem; }
+      table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+      th, td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid #1f2937; }
+      .pill { display:inline-block; padding:.2rem .45rem; border-radius:999px; font-size:.75rem; background:#1f2937; }
+      .ok { color: var(--ok); }
+      .danger { color: var(--danger); }
+      .small { font-size:.8rem; }
+      .spacer { height: .5rem; }
+      .actions button { margin-right: .35rem; }
+      pre { white-space: pre-wrap; background:#0b1020; border:1px solid #1f2937; padding:.75rem; border-radius:8px; }
     </style>
   </head>
   <body>
-    <h1>HeyDay MVP – Frontend</h1>
-    <div class="card">
-      <h2>API Health</h2>
-      <button onclick="checkHealth()">Check</button>
-      <pre id="health"></pre>
-    </div>
+    <div class="wrap">
+      <h1>HeyDay – Automations</h1>
+      <div class="grid">
+        <div class="card">
+          <h2>API</h2>
+          <div class="row">
+            <button onclick="checkHealth()">Check Health</button>
+            <span id="health" class="muted"></span>
+          </div>
+        </div>
 
-    <div class="card">
-      <h2>Create Customer</h2>
-      <input id="name" placeholder="Name" />
-      <input id="phone" placeholder="Phone" />
-      <input id="email" placeholder="Email" />
-      <input id="birthday" placeholder="Birthday (YYYY-MM-DD)" />
-      <button onclick="createCustomer()">Create</button>
-      <pre id="customer"></pre>
+        <div class="card">
+          <h2>Create Customer</h2>
+          <label>Name<input id="c_name" /></label>
+          <label>Phone<input id="c_phone" /></label>
+          <label>Email<input id="c_email" /></label>
+          <label>Birthday (YYYY-MM-DD)<input id="c_birthday" /></label>
+          <button onclick="createCustomer()">Create</button>
+          <div class="spacer"></div>
+          <button class="secondary" onclick="listCustomers()">Refresh Customers</button>
+        </div>
+
+        <div class="card">
+          <h2>Create Template</h2>
+          <label>Name<input id="t_name" /></label>
+          <label>Channel<select id="t_channel"><option>sms</option><option>email</option></select></label>
+          <label>Content<textarea id="t_content" rows="4">Happy {{name}}'s {{event}}! Have an amazing day.</textarea></label>
+          <button onclick="createTemplate()">Create</button>
+          <div class="spacer"></div>
+          <button class="secondary" onclick="listTemplates()">Refresh Templates</button>
+        </div>
+
+        <div class="card">
+          <h2>Create Dataset</h2>
+          <label>Name<input id="d_name" /></label>
+          <label>Description<input id="d_desc" /></label>
+          <button onclick="createDataset()">Create</button>
+          <div class="spacer"></div>
+          <button class="secondary" onclick="listDatasets()">Refresh Datasets</button>
+        </div>
+
+        <div class="card">
+          <h2>Create Automation</h2>
+          <label>Name<input id="a_name" /></label>
+          <label>Dataset ID<input id="a_dataset" /></label>
+          <label>Event Type ID<input id="a_event" placeholder="use seeded 1 for birthday"/></label>
+          <label>Template ID<input id="a_template" /></label>
+          <label>Day Offset<input id="a_offset" value="0" /></label>
+          <label>Send Time (HH:MM)<input id="a_time" value="09:00" /></label>
+          <label>Channel<select id="a_channel"><option>sms</option><option>email</option></select></label>
+          <div class="row"><label class="row"><input type="checkbox" id="a_active" /> Active</label></div>
+          <button onclick="createAutomation()">Create</button>
+          <div class="spacer"></div>
+          <button class="secondary" onclick="listAutomations()">Refresh Automations</button>
+        </div>
+
+        <div class="card full">
+          <h2>Customers</h2>
+          <table id="tbl_customers"><thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Birthday</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div class="card full">
+          <h2>Templates</h2>
+          <table id="tbl_templates"><thead><tr><th>ID</th><th>Name</th><th>Channel</th><th>Content</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div class="card full">
+          <h2>Datasets</h2>
+          <table id="tbl_datasets"><thead><tr><th>ID</th><th>Name</th><th>Description</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div class="card full">
+          <h2>Automations</h2>
+          <table id="tbl_automations"><thead><tr><th>ID</th><th>Name</th><th>Dataset</th><th>Event</th><th>Template</th><th>Offset</th><th>Time</th><th>Chan</th><th>Active</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div class="card">
+          <h2>Preview with AI</h2>
+          <label>Template<input id="p_template" value="Happy Birthday, {{name}}!"/></label>
+          <label>Variables (JSON)<textarea id="p_vars" rows="3">{"name":"Alex","event":"birthday"}</textarea></label>
+          <button onclick="preview()">Generate Preview</button>
+          <pre id="p_out" class="small"></pre>
+        </div>
+
+        <div class="card">
+          <h2>Messages</h2>
+          <div class="row">
+            <button onclick="listMessages()">Refresh</button>
+            <span class="muted small">Shows latest, including planned/queued</span>
+          </div>
+          <table id="tbl_messages"><thead><tr><th>ID</th><th>Cust</th><th>Chan</th><th>Status</th><th>Sched</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
     </div>
 
     <script>
-      const API = '/api'; // proxied by vercel.json to Railway
+      const API = '/api';
+
+      function setText(id, text) { document.getElementById(id).textContent = text; }
+      function rowHtml(cells) { return `<tr>${cells.map(c=>`<td>${c ?? ''}</td>`).join('')}</tr>`; }
 
       async function checkHealth() {
-        const r = await fetch(`${API}/health`);
-        document.getElementById('health').textContent = JSON.stringify(await r.json(), null, 2);
+        try { const r = await fetch(`${API}/health`); const j = await r.json(); setText('health', JSON.stringify(j)); }
+        catch(e){ setText('health', 'error'); }
       }
 
-      async function createCustomer() {
-        const data = {
-          name: document.getElementById('name').value,
-          phone: document.getElementById('phone').value || null,
-          email: document.getElementById('email').value || null,
-          birthday: document.getElementById('birthday').value || null,
-        };
-        const r = await fetch(`${API}/customers/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        document.getElementById('customer').textContent = JSON.stringify(await r.json(), null, 2);
+      async function createCustomer(){
+        const data = { name: v('c_name'), phone: v('c_phone')||null, email: v('c_email')||null, birthday: v('c_birthday')||null };
+        const r = await fetch(`${API}/customers/`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        await r.json();
+        await listCustomers();
       }
+
+      async function listCustomers(){
+        const r = await fetch(`${API}/customers/`); const j = await r.json();
+        const tb = document.querySelector('#tbl_customers tbody'); tb.innerHTML = j.map(x=>rowHtml([x.id, x.name, x.phone, x.email, x.birthday||''])).join('');
+      }
+
+      async function createTemplate(){
+        const data = { name:v('t_name'), channel:v('t_channel'), content:v('t_content') };
+        const r = await fetch(`${API}/templates/`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        await r.json();
+        await listTemplates();
+      }
+
+      async function listTemplates(){
+        const r = await fetch(`${API}/templates/`); const j = await r.json();
+        const tb = document.querySelector('#tbl_templates tbody'); tb.innerHTML = j.map(x=>rowHtml([x.id, x.name, x.channel, escapeHtml(x.content)])).join('');
+      }
+
+      async function createDataset(){
+        const data = { name:v('d_name'), description:v('d_desc')||null };
+        await fetch(`${API}/datasets/`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        await listDatasets();
+      }
+
+      async function listDatasets(){
+        const r = await fetch(`${API}/datasets/`); const j = await r.json();
+        const tb = document.querySelector('#tbl_datasets tbody'); tb.innerHTML = j.map(x=>rowHtml([x.id, x.name, x.description||''])).join('');
+      }
+
+      async function createAutomation(){
+        const data = {
+          name:v('a_name'), dataset_id:parseInt(v('a_dataset')), event_type_id:parseInt(v('a_event')),
+          template_id:parseInt(v('a_template')), day_offset:parseInt(v('a_offset')||'0'), send_time:v('a_time'),
+          channel:v('a_channel'), active:document.getElementById('a_active').checked
+        };
+        await fetch(`${API}/automations/`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        await listAutomations();
+      }
+
+      async function listAutomations(){
+        const r = await fetch(`${API}/automations/`); const j = await r.json();
+        const tb = document.querySelector('#tbl_automations tbody'); tb.innerHTML = j.map(x=>rowHtml([x.id, x.name, x.dataset_id, x.event_type_id, x.template_id, x.day_offset, x.send_time, x.channel, x.active?'<span class="pill ok">on</span>':'<span class="pill">off</span>'])).join('');
+      }
+
+      async function preview(){
+        let vars={}; try{ vars = JSON.parse(v('p_vars')||'{}'); }catch{ }
+        const r = await fetch(`${API}/messages/preview`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ template: v('p_template'), variables: vars })});
+        const j = await r.json();
+        setText('p_out', j.preview || '');
+      }
+
+      async function listMessages(){
+        const r = await fetch(`${API}/messages/`); const j = await r.json();
+        const tb = document.querySelector('#tbl_messages tbody'); tb.innerHTML = j.map(x=>rowHtml([x.id, x.customer_id, x.channel, x.status, x.scheduled_for||''])).join('');
+      }
+
+      function v(id){ return document.getElementById(id).value; }
+      function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+      // initial loads
+      checkHealth();
+      listCustomers();
+      listTemplates();
+      listDatasets();
+      listAutomations();
+      listMessages();
     </script>
   </body>
-  </html>
+</html>
 
