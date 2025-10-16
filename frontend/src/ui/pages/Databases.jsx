@@ -9,7 +9,7 @@ export function Databases(){
   const [loading, setLoading] = React.useState(false)
 
   async function refresh(){
-    try { const r = await api.get('/datasets'); setItems(r.data) }
+    try { const r = await api.get('/datasets/'); setItems(r.data) }
     catch { /* ignore */ }
   }
 

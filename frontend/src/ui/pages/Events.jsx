@@ -5,8 +5,9 @@ export function Events(){
   const [items, setItems] = React.useState([])
   const [form, setForm] = React.useState({ name:'', dataset_id:'', event_type_id:'', template_id:'', day_offset:0, send_time:'09:00', channel:'sms', active:false })
 
-  async function refresh(){ const r = await api.get('/automations'); setItems(r.data) }
+  async function refresh(){ const r = await api.get('/automations/'); setItems(r.data) }
   async function create(){
+    if (!form.name.trim() || !form.dataset_id || !form.event_type_id || !form.template_id) { alert('Please fill all IDs and name'); return }
     const payload = { ...form, dataset_id:parseInt(form.dataset_id), event_type_id:parseInt(form.event_type_id), template_id:parseInt(form.template_id), day_offset:parseInt(form.day_offset) }
     await api.post('/automations/', payload); setForm({ ...form, name:'', dataset_id:'', event_type_id:'', template_id:'' }); refresh()
   }

@@ -3,7 +3,7 @@ import { api } from '../../util/api'
 
 export function Queue(){
   const [items, setItems] = React.useState([])
-  async function refresh(){ const r = await api.get('/messages'); setItems(r.data) }
+  async function refresh(){ const r = await api.get('/messages/'); setItems(r.data) }
   async function approve(id){ await api.post(`/messages/${id}/approve`); refresh() }
   async function cancel(id){ await api.post(`/messages/${id}/cancel`); refresh() }
   React.useEffect(()=>{ refresh() },[])

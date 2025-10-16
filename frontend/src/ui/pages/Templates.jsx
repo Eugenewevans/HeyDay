@@ -7,7 +7,7 @@ export function Templates(){
   const [channel, setChannel] = React.useState('sms')
   const [content, setContent] = React.useState('Happy {{name}}!')
 
-  async function refresh(){ const r = await api.get('/templates'); setItems(r.data) }
+  async function refresh(){ const r = await api.get('/templates/'); setItems(r.data) }
   async function create(){ await api.post('/templates/', { name, channel, content }); setName(''); setContent(''); refresh() }
   React.useEffect(()=>{ refresh() },[])
 
