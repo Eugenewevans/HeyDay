@@ -17,7 +17,7 @@ from app.db.session import get_db
 from app.db.schemas.customer import CustomerCreate
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, date
 
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
@@ -86,7 +86,7 @@ def _normalize_headers(headers: list[str]) -> list[str]:
     return [h.strip().lower() for h in headers]
 
 
-def _parse_date(value: str | None) -> datetime.date | None:
+def _parse_date(value: str | None) -> date | None:
     if not value:
         return None
     value = value.strip()
