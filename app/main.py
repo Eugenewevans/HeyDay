@@ -7,6 +7,7 @@ from app.core.config import settings, get_allowed_origins
 from app.db.session import engine
 from app.db.models.base import Base
 from app.api.routes import api_router
+from app.services.scheduler import SchedulerService
 
 
 @asynccontextmanager
@@ -34,4 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Start background scheduler (simple daily runner placeholder)
+_scheduler = SchedulerService()
+_scheduler.start()
 
