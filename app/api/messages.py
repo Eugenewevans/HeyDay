@@ -11,6 +11,7 @@ from app.db.crud.message import (
 from app.db.schemas.message import MessageCreate, MessageOut, MessageUpdate
 from app.db.session import get_db
 from app.services.ai import AIService
+from app.db.models.message import Message as MessageModel
 
 
 router = APIRouter(prefix="/messages", tags=["messages"])
@@ -59,4 +60,28 @@ def preview_prompt(template: str, variables: dict[str, str] | None = None):
             prompt = prompt.replace("{{" + k + "}}", v)
     text = AIService().generate_message(prompt)
     return {"preview": text}
+
+
+@router.post("/{message_id}/approve", response_model=MessageOut)
+def approve(message_id: int, db: Session = Depends(get_db)):
+    m = get_message(db, message_id)
+    if not m:
+        raise HTTPException(status_code=404, detail="Message not found")
+    m.status = "queued"
+    db.add(m)
+    db.commit()
+    db.refresh(m)
+    return m
+
+
+@router.post("/{message_id}/cancel", response_model=MessageOut)
+def cancel(message_id: int, db: Session = Depends(get_db)):
+    m = get_message(db, message_id)
+    if not m:
+        raise HTTPException(status_code=404, detail="Message not found")
+    m.status = "failed"
+    db.add(m)
+    db.commit()
+    db.refresh(m)
+    return m
 

@@ -6,6 +6,9 @@ from app.db.crud.dataset import list_dataset_customers
 from app.db.models.automation import Automation
 from app.db.models.consent import Consent
 from app.db.models.message import Message
+from app.db.models.template import Template
+from app.services.ai import AIService
+from app.services.messaging import SMSProvider, EmailProvider
 from app.db.session import SessionLocal
 
 
@@ -56,13 +59,42 @@ def plan_upcoming_messages() -> int:
 
 
 def dispatch_due_messages() -> int:
-    """Move due planned messages to queued; in future, send via provider."""
+    """Generate content for due messages and simulate send; mark as sent/failed."""
     db: Session = SessionLocal()
     try:
         now = datetime.utcnow()
         due = db.query(Message).filter(Message.status == "planned", Message.scheduled_for <= now).all()
+        sms = SMSProvider()
+        email = EmailProvider()
+        ai = AIService()
         for m in due:
+            # Fill content from template + AI if empty
+            if not m.body:
+                tpl = db.get(Template, m.automation_id and db.get(Message, m.id).automation_id)
+            # Fallback simple template lookup by automation->template
+            from app.db.models.automation import Automation
+            a = db.get(Automation, m.automation_id) if m.automation_id else None
+            tpl = db.get(Template, a.template_id) if a else None
+            prompt = (tpl.content if tpl else "Hello {{name}}")
+            # For now, we don't hydrate variables from contact; just simple name placeholder
+            from app.db.models.customer import Customer
+            c = db.get(Customer, m.customer_id)
+            variables = {"name": c.name if c else "there"}
+            for k, v in variables.items():
+                prompt = prompt.replace("{{"+k+"}}", v)
+            body = ai.generate_message(prompt)
+            m.body = body
             m.status = "queued"
+            db.add(m)
+            # Simulate send
+            ok = True
+            if m.channel == "sms" and c and c.phone:
+                ok = sms.send_sms(c.phone, body)
+            elif m.channel == "email" and c and c.email:
+                ok = email.send_email(c.email, subject=tpl.name if tpl else "HeyDay", html=body)
+            else:
+                ok = False
+            m.status = "sent" if ok else "failed"
             db.add(m)
         db.commit()
         return len(due)
