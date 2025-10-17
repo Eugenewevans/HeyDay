@@ -76,7 +76,7 @@ export function Databases(){
             try {
               const fd = new FormData();
               fd.append('file', csvFile)
-              await api.post(`/datasets/${datasetId}/import/csv`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+              await api.post(`/datasets/${datasetId}/import/csv`, fd)
               setImportMsg('Imported.')
               const r = await api.get(`/datasets/${datasetId}/customers`); setCustomers(r.data)
             } catch(e){ setImportMsg('Import failed') }
