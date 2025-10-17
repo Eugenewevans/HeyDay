@@ -1,4 +1,5 @@
 from typing import Optional
+import httpx
 
 from app.core.config import settings
 
@@ -10,12 +11,19 @@ class SMSProvider:
         self.from_number = from_number or settings.twilio_from_number
 
     def send_sms(self, to: str, body: str) -> bool:
-        # Placeholder: integrate twilio client here
         if not (self.account_sid and self.auth_token and self.from_number):
-            # Dev mode: simulate success
-            return True
-        # TODO: real Twilio integration
-        return True
+            return True  # Dev mode
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.account_sid}/Messages.json"
+            resp = httpx.post(
+                url,
+                auth=(self.account_sid, self.auth_token),
+                data={"From": self.from_number, "To": to, "Body": body + "\n\nReply STOP to unsubscribe."},
+                timeout=10,
+            )
+            return resp.status_code in (200, 201)
+        except Exception:
+            return False
 
 
 class EmailProvider:
@@ -24,10 +32,18 @@ class EmailProvider:
         self.from_email = from_email or settings.sendgrid_from_email
 
     def send_email(self, to: str, subject: str, html: str) -> bool:
-        # Placeholder: integrate SendGrid client here
         if not (self.api_key and self.from_email):
-            # Dev mode: simulate success
-            return True
-        # TODO: real SendGrid integration
-        return True
+            return True  # Dev mode
+        try:
+            url = "https://api.sendgrid.com/v3/mail/send"
+            payload = {
+                "personalizations": [{"to": [{"email": to}]}],
+                "from": {"email": self.from_email},
+                "subject": subject,
+                "content": [{"type": "text/html", "value": html}],
+            }
+            resp = httpx.post(url, json=payload, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=10)
+            return resp.status_code in (200, 202)
+        except Exception:
+            return False
 
