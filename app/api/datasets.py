@@ -13,6 +13,8 @@ from app.db.crud.dataset import (
 )
 from app.db.schemas.dataset import DatasetCreate, DatasetOut, DatasetUpdate
 from app.db.schemas.customer import CustomerOut
+from app.db.schemas.dataset_field_map import DatasetFieldMapCreate, DatasetFieldMapOut
+from app.db.crud.dataset_field_map import upsert_mapping, list_mappings
 from app.db.session import get_db
 from app.db.schemas.customer import CustomerCreate
 import csv
@@ -146,6 +148,18 @@ def import_json(dataset_id: int, items: list[CustomerCreate], db: Session = Depe
         add_customer_to_dataset(db, dataset_id, c.id)
         created += 1
     return {"imported": created}
+
+
+@router.get("/{dataset_id}/mappings", response_model=list[DatasetFieldMapOut])
+def get_mappings(dataset_id: int, db: Session = Depends(get_db)):
+    return list_mappings(db, dataset_id)
+
+
+@router.post("/{dataset_id}/mappings", response_model=DatasetFieldMapOut)
+def set_mapping(dataset_id: int, data: DatasetFieldMapCreate, db: Session = Depends(get_db)):
+    if data.dataset_id != dataset_id:
+        raise HTTPException(status_code=400, detail="dataset_id mismatch")
+    return upsert_mapping(db, data)
 
 
 @router.post("/{dataset_id}/import/csv-map")

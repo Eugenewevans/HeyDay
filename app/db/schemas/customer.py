@@ -8,6 +8,7 @@ class CustomerBase(BaseModel):
     phone: str | None = None
     email: EmailStr | None = None
     birthday: date | None = None
+    attributes: dict | None = None
 
 
 class CustomerCreate(CustomerBase):
@@ -19,6 +20,7 @@ class CustomerUpdate(BaseModel):
     phone: str | None = None
     email: EmailStr | None = None
     birthday: date | None = None
+    attributes: dict | None = None
 
 
 class CustomerOut(CustomerBase):

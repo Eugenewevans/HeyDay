@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.db.crud.dataset import list_dataset_customers
+from app.db.crud.dataset_field_map import list_mappings
 from app.db.models.automation import Automation
 from app.db.models.consent import Consent
 from app.db.models.message import Message
@@ -26,9 +27,21 @@ def plan_upcoming_messages() -> int:
         for a in db.query(Automation).filter(Automation.active == True).all():  # noqa: E712
             # For MVP: assume event date is customer's birthday; schedule on date + offset
             customers = list_dataset_customers(db, a.dataset_id)
+            mappings = {m.role: m.source_column for m in list_mappings(db, a.dataset_id)}
             hh, mm = _parse_time(a.send_time)
             for c in customers:
-                event_date = c.birthday  # extend later per event type
+                # Determine trigger date: prefer mapped trigger_date -> attributes; fallback to birthday
+                event_date = None
+                trigger_col = mappings.get("trigger_date")
+                if trigger_col and c.attributes and trigger_col in c.attributes:
+                    # attempt to parse from attributes as YYYY-MM-DD
+                    val = c.attributes.get(trigger_col)
+                    try:
+                        event_date = datetime.strptime(val, "%Y-%m-%d").date()
+                    except Exception:
+                        event_date = None
+                if not event_date:
+                    event_date = c.birthday
                 if not event_date:
                     continue
                 scheduled_date = event_date + timedelta(days=a.day_offset)

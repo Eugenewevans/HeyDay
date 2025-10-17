@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Date, Integer, String
+from sqlalchemy import Date, Integer, String, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import Base
@@ -14,4 +14,5 @@ class Customer(Base):
     phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     birthday: Mapped[date | None] = mapped_column(Date, nullable=True)
+    attributes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
