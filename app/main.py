@@ -8,7 +8,7 @@ from app.db.session import engine
 from app.db.models.base import Base
 from app.api.routes import api_router
 from app.services.scheduler import SchedulerService
-from app.services.automation_runner import plan_upcoming_messages, dispatch_due_messages
+from app.services.message_pipeline import plan_messages, generate_pending_messages, auto_approve_messages, send_approved_messages
 from app.core.bootstrap import seed_event_types
 
 
@@ -39,9 +39,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Start background scheduler (simple daily runner placeholder)
+# Start background scheduler with Phase 4 pipeline
 _scheduler = SchedulerService()
 _scheduler.start()
-_scheduler.schedule_every_cron("*/5 * * * *", plan_upcoming_messages)
-_scheduler.schedule_every_cron("*/5 * * * *", dispatch_due_messages)
+_scheduler.schedule_every_cron("0 0 * * *", plan_messages)  # daily at midnight
+_scheduler.schedule_every_cron("*/5 * * * *", generate_pending_messages)  # every 5 min
+_scheduler.schedule_every_cron("*/5 * * * *", auto_approve_messages)  # every 5 min
+_scheduler.schedule_every_cron("*/5 * * * *", send_approved_messages)  # every 5 min
 

@@ -1,5 +1,6 @@
 import React from 'react'
 import { api } from '../../util/api'
+import { UploadWizard } from './UploadWizard'
 
 export function Databases(){
   const [items, setItems] = React.useState([])
@@ -108,6 +109,14 @@ export function Databases(){
             } catch(e){ setImportMsg('Import with mapping failed') }
           }}>Upload with mapping</button>
         </div>
+      </div>
+
+      <div className="card">
+        <h2>Upload Wizard (Flexible Schema)</h2>
+        <div className="row" style={{marginBottom:'.5rem'}}>
+          <input placeholder="Dataset ID" value={datasetId} onChange={e=>setDatasetId(e.target.value)} />
+        </div>
+        {datasetId && <UploadWizard datasetId={datasetId} onComplete={refresh} />}
       </div>
     </>
   )
