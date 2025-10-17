@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.customers import router as customers_router
 from app.api.templates import router as templates_router
 from app.api.datasets import router as datasets_router
+from app.api.datasets_v2 import router as datasets_v2_router
 from app.api.event_types import router as event_types_router
 from app.api.automations import router as automations_router
 from app.api.messages import router as messages_router
@@ -20,6 +21,7 @@ def health():
 api_router.include_router(customers_router)
 api_router.include_router(templates_router)
 api_router.include_router(datasets_router)
+api_router.include_router(datasets_v2_router)
 api_router.include_router(event_types_router)
 api_router.include_router(automations_router)
 api_router.include_router(messages_router)
