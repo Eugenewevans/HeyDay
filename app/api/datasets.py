@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from app.db.crud.dataset import (
@@ -142,6 +142,54 @@ def import_json(dataset_id: int, items: list[CustomerCreate], db: Session = Depe
 
     created = 0
     for data in items:
+        c = create_customer(db, data)
+        add_customer_to_dataset(db, dataset_id, c.id)
+        created += 1
+    return {"imported": created}
+
+
+@router.post("/{dataset_id}/import/csv-map")
+async def import_csv_with_mapping(
+    dataset_id: int,
+    file: UploadFile = File(...),
+    name_col: str | None = Form(None),
+    email_col: str | None = Form(None),
+    phone_col: str | None = Form(None),
+    birthday_col: str | None = Form(None),
+    db: Session = Depends(get_db),
+):
+    ds = get_dataset(db, dataset_id)
+    if not ds:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    content = await file.read()
+    text = content.decode("utf-8-sig", errors="ignore")
+    reader = csv.DictReader(io.StringIO(text))
+    reader.fieldnames = _normalize_headers(reader.fieldnames or [])
+
+    def pick(row_l: dict[str, str], col: str | None, fallback: list[str]) -> str | None:
+        if col:
+            key = col.strip().lower()
+            return row_l.get(key) or None
+        return _get(row_l, fallback)
+
+    name_keys = ["name", "full name", "customer name"]
+    email_keys = ["email", "e-mail"]
+    phone_keys = ["phone", "phone number", "mobile"]
+    bday_keys = ["birthday", "dob", "date of birth", "birthdate"]
+
+    created = 0
+    for row in reader:
+        row_l = {k.strip().lower(): (v.strip() if isinstance(v, str) else v) for k, v in row.items()}
+        data = CustomerCreate(
+            name=pick(row_l, name_col, name_keys) or "",
+            email=pick(row_l, email_col, email_keys),
+            phone=pick(row_l, phone_col, phone_keys),
+            birthday=_parse_date(pick(row_l, birthday_col, bday_keys)),
+        )
+        if not data.name:
+            continue
+        from app.db.crud.customer import create_customer
+
         c = create_customer(db, data)
         add_customer_to_dataset(db, dataset_id, c.id)
         created += 1

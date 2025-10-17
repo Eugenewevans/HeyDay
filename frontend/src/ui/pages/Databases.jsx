@@ -11,6 +11,7 @@ export function Databases(){
   const [customers, setCustomers] = React.useState([])
   const [csvFile, setCsvFile] = React.useState(null)
   const [importMsg, setImportMsg] = React.useState('')
+  const [mapping, setMapping] = React.useState({ name_col:'', email_col:'', phone_col:'', birthday_col:'' })
 
   async function refresh(){
     try { const r = await api.get('/datasets/'); setItems(r.data) }
@@ -84,7 +85,29 @@ export function Databases(){
           }}>Upload CSV</button>
         </div>
         {importMsg ? <div className="muted">{importMsg}</div> : null}
-        <div className="muted small">Auto-detects: name, email, phone, birthday.</div>
+        <div className="muted small">Auto-detects: name, email, phone, birthday. If headers differ, provide mapping below and upload again.</div>
+        <div className="row" style={{marginTop: '.5rem'}}>
+          <input placeholder="Name column (optional)" value={mapping.name_col} onChange={e=>setMapping({...mapping, name_col:e.target.value})} />
+          <input placeholder="Email column" value={mapping.email_col} onChange={e=>setMapping({...mapping, email_col:e.target.value})} />
+          <input placeholder="Phone column" value={mapping.phone_col} onChange={e=>setMapping({...mapping, phone_col:e.target.value})} />
+          <input placeholder="Birthday column" value={mapping.birthday_col} onChange={e=>setMapping({...mapping, birthday_col:e.target.value})} />
+          <button onClick={async()=>{
+            setImportMsg('')
+            if(!datasetId || !csvFile){ setImportMsg('Select dataset and CSV'); return }
+            try {
+              const fd = new FormData();
+              fd.append('file', csvFile)
+              if(mapping.name_col) fd.append('name_col', mapping.name_col)
+              if(mapping.email_col) fd.append('email_col', mapping.email_col)
+              if(mapping.phone_col) fd.append('phone_col', mapping.phone_col)
+              if(mapping.birthday_col) fd.append('birthday_col', mapping.birthday_col)
+              const res = await api.post(`/datasets/${String(datasetId).trim()}/import/csv-map`, fd)
+              const n = res?.data?.imported ?? 0
+              setImportMsg(`Imported ${n} record${n===1?'':'s'} with mapping.`)
+              const r = await api.get(`/datasets/${datasetId}/customers`); setCustomers(r.data)
+            } catch(e){ setImportMsg('Import with mapping failed') }
+          }}>Upload with mapping</button>
+        </div>
       </div>
     </>
   )
