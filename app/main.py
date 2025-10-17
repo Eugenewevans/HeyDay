@@ -10,12 +10,18 @@ from app.api.routes import api_router
 from app.services.scheduler import SchedulerService
 from app.services.message_pipeline import plan_messages, generate_pending_messages, auto_approve_messages, send_approved_messages
 from app.core.bootstrap import seed_event_types
+from app.db.migrate import run_migrations
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Create tables on startup for SQLite demo convenience
     Base.metadata.create_all(bind=engine)
+    # Run migrations to update schema
+    try:
+        run_migrations()
+    except Exception as e:
+        print(f"Migration warning: {e}")
     seed_event_types()
     yield
 
