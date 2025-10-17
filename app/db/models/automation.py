@@ -15,9 +15,11 @@ class Automation(Base):
     event_type_id: Mapped[int] = mapped_column(ForeignKey("event_types.id", ondelete="RESTRICT"), index=True)
     template_id: Mapped[int] = mapped_column(ForeignKey("templates.id", ondelete="RESTRICT"), index=True)
 
-    # Simple date-based rule: N days offset (e.g., -3 for 3 days before)
+    # Trigger configuration
+    trigger_column_name: Mapped[str] = mapped_column(String(100), nullable=False)  # which date column drives this
     day_offset: Mapped[int] = mapped_column(Integer, default=0)
     send_time: Mapped[str] = mapped_column(String(5), default="09:00")  # HH:MM 24h
     channel: Mapped[str] = mapped_column(String(10), default="sms")  # sms|email
+    mode: Mapped[str] = mapped_column(String(10), default="preview")  # preview|auto
     active: Mapped[bool] = mapped_column(Boolean, default=False)
 

@@ -5,9 +5,9 @@ from pydantic import BaseModel
 
 class MessageBase(BaseModel):
     automation_id: int | None = None
-    customer_id: int
+    record_id: int
     channel: str  # sms|email
-    status: str = "planned"
+    status: str = "pending"  # pending|generated|approved|sent|failed
     subject: str | None = None
     body: str | None = None
     scheduled_for: datetime | None = None
