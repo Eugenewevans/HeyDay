@@ -76,8 +76,9 @@ export function Databases(){
             try {
               const fd = new FormData();
               fd.append('file', csvFile)
-              await api.post(`/datasets/${datasetId}/import/csv`, fd)
-              setImportMsg('Imported.')
+              const res = await api.post(`/datasets/${String(datasetId).trim()}/import/csv`, fd)
+              const n = res?.data?.imported ?? 0
+              setImportMsg(`Imported ${n} record${n===1?'':'s'}.`)
               const r = await api.get(`/datasets/${datasetId}/customers`); setCustomers(r.data)
             } catch(e){ setImportMsg('Import failed') }
           }}>Upload CSV</button>
